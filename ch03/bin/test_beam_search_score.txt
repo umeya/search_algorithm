@@ -1,0 +1,28 @@
+foo@bar:/mnt/hoge/ch03$ hyperfine --min-runs 2  'python3 test_beam_search_score.py'  './test_beam_search_score'
+Benchmark 1: python3 test_beam_search_score.py
+  Time (mean ± σ):     128.335 s ±  8.127 s    [User: 128.322 s, System: 0.000 s]
+  Range (min … max):   122.588 s … 134.082 s    2 runs
+
+Benchmark 2: ./test_beam_search_score
+  Time (mean ± σ):     10.926 s ±  0.228 s    [User: 7.887 s, System: 6.258 s]
+  Range (min … max):   10.764 s … 11.087 s    2 runs
+
+Summary
+  './test_beam_search_score' ran
+   11.75 ± 0.78 times faster than 'python3 test_beam_search_score.py'
+
+
+foo@bar:/mnt/hoge/ch03$ hyperfine --min-runs 2  -i './test_beam_search_score' '04a_TestBeamSearchScore'
+Benchmark 1: ./test_beam_search_score
+  Time (mean ± σ):     10.916 s ±  0.013 s    [User: 7.860 s, System: 6.313 s]
+  Range (min … max):   10.907 s … 10.926 s    2 runs
+
+Benchmark 2: 04a_TestBeamSearchScore
+  Time (mean ± σ):      42.8 ms ±   3.3 ms    [User: 3.1 ms, System: 2.8 ms]
+  Range (min … max):    36.8 ms …  51.3 ms    65 runs
+
+  Warning: Ignoring non-zero exit code.
+
+Summary
+  '04a_TestBeamSearchScore' ran
+  255.18 ± 19.84 times faster than './test_beam_search_score'
