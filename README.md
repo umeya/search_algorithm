@@ -5,7 +5,7 @@
 * windows11のWSL (Ubuntu 22.04.2 LTS)<br>wslttyが便利なので使っています。
 * Python 3.10.6
 * g++ 11.3.0 
-* CODON ver0.6<br>下のシェルスクリプトをrun、buildするためにcodon_run.shとcodon_build.sh使っています。<br>
+* CODON ver0.6<br>下のシェルスクリプトをrun、buildするためにcodon_run.shとcodon_build.sh使っています。また書籍のサンプルCPPファイルをコンパイル・ビルドするスクリプトcppbuild.shも使用しています。<br>
   `/home/user_name/.codon/bin`の部分はCODONインストール時に表示されるPATHです。
 
 ```sh:codon_run.sh
@@ -16,7 +16,11 @@ codon run $1
 ```sh:codon_build.sh
 #!/bin/bash
 export PATH=/home/umeya/.codon/bin:$PATH
-codon build  -release $1 -o $2
+codon build  -release $1.py -o $1
+```
+```sh:cppbuild.sh
+#!/bin/bash
+g++ -O3 -std=c++17 -o  $1 $1.cpp
 ```
 ソースコードをsrc、実行ファイルをbin、スクリーンショットをimgフォルダーに入れました。
 
@@ -29,6 +33,14 @@ codon build  -release $1 -o $2
 *  test_greedy_score.py <br>上の貪欲法による探索を１００万回実行したときの平均スコアを求める
 *  beam_search.py <br>深さと幅を指定する探索。<br>
 *  test_beam_search_score.py <br>上のbeam_searchによる探索を１００万回実行したときの平均スコアを求める
+*  chokudai_search.py<br>Chokusaiサーチ。コマンドラインでの実行で下のようにしてオプションで迷路幅などを指定できる。（下のコマンドラインでの指定はデフォルト値）
+  ```
+python chokudai_search --MAZE_WIDTH=4 --MAZE_HEIGHT=3 --GAME_END_TURN=4 --PRINT_STATE=y --BEAM_WIDTH=2 --BEAM_DEPTH=4
+```
+*  test_chokudai_search.py<br>上のbeam_searchによる探索を１００回実行したときの平均スコアを求める。上のchokudai_search.py と同様にオプションの指定ができる。GAME_NUMBERで実験回数を指定できる。
+    ```
+python chokudai_search --MAZE_WIDTH=4 --MAZE_HEIGHT=3 --GAME_END_TURN=4 --PRINT_STATE=y --BEAM_WIDTH=2 --BEAM_DEPTH=4 --GAME_NUMBER=100
+```
 #### bin
 * beam_search<br>beam_search.pyをCODONでコンパイル・ビルドした実行形式。オプションで迷路幅などを指定できる。（下のコマンドラインでの指定はデフォルト値）
 ```
