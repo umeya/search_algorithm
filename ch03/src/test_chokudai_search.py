@@ -3,7 +3,6 @@ from typing import List
 import sys
 import time
 
-
 class Coord:
     y_: int
     x_: int
