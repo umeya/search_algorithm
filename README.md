@@ -16,7 +16,7 @@ codon run $1
 ```sh:codon_build.sh
 #!/bin/bash
 export PATH=/home/umeya/.codon/bin:$PATH
-codon build  -release $1.py -o $1
+codon build  -release $1.py -o $1_py
 ```
 ```sh:cppbuild.sh
 #!/bin/bash
@@ -38,9 +38,10 @@ g++ -O3 -std=c++17 -o  $1 $1.cpp
 python chokudai_search --MAZE_WIDTH=4 --MAZE_HEIGHT=3 --GAME_END_TURN=4 --PRINT_STATE=y --BEAM_WIDTH=2 --BEAM_DEPTH=4
 ```
 *  test_chokudai_search.py<br>上のbeam_searchによる探索を１００回実行したときの平均スコアを求める。上のchokudai_search.py と同様にオプションの指定ができる。GAME_NUMBERで実験回数を指定できる。
-    ```
+```
 python chokudai_search --MAZE_WIDTH=4 --MAZE_HEIGHT=3 --GAME_END_TURN=4 --PRINT_STATE=y --BEAM_WIDTH=2 --BEAM_DEPTH=4 --GAME_NUMBER=100
 ```
+
 #### bin
 * beam_search<br>beam_search.pyをCODONでコンパイル・ビルドした実行形式。オプションで迷路幅などを指定できる。（下のコマンドラインでの指定はデフォルト値）
 ```
@@ -77,3 +78,8 @@ Summary
   '04a_TestBeamSearchScore' ran
   255.18 ± 19.84 times faster than './test_beam_search_score'
 ```
+
+### 第４章(ch4)「文脈のない人るゲーム　オート数字集め迷路」
+#### src
+* auto_move_maze_state.py<br>キャラクターの初期配置をランダムにした場合
+* hill_climb.py<br>「山登り法」による近傍最適性を使った数字集め。ここでは、初期配置をランダムにして数字集めを行いそのゲームスコア最良スコアとし、この初期配置をする最良キャラクターとする。続いて指定回数（10000回）ゲームを行う。最良キャラクターの一つを選びその位置をランダムに変えゲームスコアを求め、最良スコアより大きい場合に最良キャラクターと最良スコアをこのゲームでのものとする。
