@@ -1,0 +1,5 @@
+Algorithm/gameAI/python/ch04$ ./comparison_HC_SA_py
+SIMULATE_NUMBER=10000
+mean of scoring ratio : hill climb 0.8749 , simulated nealing 0.8801
+処理時間 331.673(秒)
+umeya@UM560:/mnt/d/Algorithm/gameAI/python/ch04$

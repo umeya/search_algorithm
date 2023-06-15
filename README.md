@@ -79,7 +79,16 @@ Summary
   255.18 ± 19.84 times faster than './test_beam_search_score'
 ```
 
-### 第４章(ch4)「文脈のない人るゲーム　オート数字集め迷路」
+### 第４章(ch4)「文脈のない一人ゲーム　オート数字集め迷路」
 #### src
 * auto_move_maze_state.py<br>キャラクターの初期配置をランダムにした場合
 * hill_climb.py<br>「山登り法」による近傍最適性を使った数字集め。ここでは、初期配置をランダムにして数字集めを行いそのゲームスコア最良スコアとし、この初期配置をする最良キャラクターとする。続いて指定回数（10000回）ゲームを行う。最良キャラクターの一つを選びその位置をランダムに変えゲームスコアを求め、最良スコアより大きい場合に最良キャラクターと最良スコアをこのゲームでのものとする。
+* simulated_annealing.py<br>「焼きなまし法」を使って大域的最適解の探索。
+* comparison_HC_SA.py<br>「山登り法」と「焼きなまし法」の比較。平均スコアではなく、得点率（得点/迷路上に数の和）の平均を出してみた。
+```txt:HC_SA10000.txt
+Algorithm/gameAI/python/ch04$ ./comparison_HC_SA_py
+SIMULATE_NUMBER=10000
+mean of scoring ratio : hill climb 0.8749 , simulated nealing 0.8801
+処理時間 331.673(秒)
+Algorithm/gameAI/python/ch04$
+```

@@ -1,21 +1,29 @@
+"""
+山登り法(Hill Climb)と焼きなまし法(Simulated Annealin)の比較
+"""
 
 import random
-from typing import List
+from typing import List, Tuple
 import sys
 import time
+import math
 
 #  global constants
 MAZE_WIDTH_: int = 5  # 迷路の幅
 MAZE_HEIGHT_: int = 5  # 迷路の高さ
 GAME_END_TURN_: int = 5  # ゲーム終了のターン
-GAME_NUMBERS_ :int = 10000 # ゲーム回数
+GAME_NUMBERS_:int = 10000 # ゲーム回数
 CHARACTER_N: int = 3  # キャラクターの数
 ACTIONS: int = 4  # 移動方向　右(0)、左(1)、下(2)、上(3)
 DX: List[int] = [1, -1, 0, 0]
 DY: List[int] = [0, 0, 1, -1]
-PRINT_STATE_: bool = True
+PRINT_STATE_: bool = False
+
+SIMULATE_NUMBER : int
+
 
 INF: int = sys.maxsize
+# F_INF:float = float('inf')
 
 
 class Coord:
@@ -38,9 +46,6 @@ class AutoMoveMazeState():
         if turn == -1:
             self.turn_ = 0
             self.point_ = [[random.randint(1, 9) for _ in range(MAZE_WIDTH_)] for _ in range(MAZE_HEIGHT_)]
-            # ---- test
-            # self.point_ = [[9, 1, 3, 7, 8], [7, 8, 2, 2, 1], [9, 3, 7, 4, 2], [3, 1, 1, 6, 4], [9, 3, 9, 3, 9]]
-            # -----
             self.characters_ = []
             for _ in range(CHARACTER_N):
                 cd = Coord()
@@ -88,11 +93,7 @@ class AutoMoveMazeState():
             self.set_character(character_id,
                                random.randint(0, MAZE_HEIGHT_ - 1),
                                random.randint(0, MAZE_WIDTH_ - 1))
-        # ----- test
-        # for i, (y, x) in enumerate([(3, 0), (3, 4), (4, 4)]):
-        #     self.set_character(i, y, x)
-        # ----------
-    
+
     def initial_solution(self):
         for id in range(CHARACTER_N):
             self.characters_[id].y_ = random.randint(0, MAZE_HEIGHT_ - 1)
@@ -102,8 +103,7 @@ class AutoMoveMazeState():
         id = random.randint(0, CHARACTER_N - 1)
         self.characters_[id].y_ = random.randint(0, MAZE_HEIGHT_ - 1)
         self.characters_[id].x_ = random.randint(0, MAZE_WIDTH_ - 1)
-        
-        
+
     def print_maze_state(self) -> None:
         charcters = [(id.y_, id.x_) for id in self.characters_]
         print(f'turn_={self.turn_} , game_score_={self.game_score_}', end=':charcters ')
@@ -124,16 +124,12 @@ class AutoMoveMazeState():
 class HillClimb():
     now_state: AutoMoveMazeState
     next_state: AutoMoveMazeState
-    characters_path: List[List[Coord]]
     best_characters: List[Coord]
-    score_path: List[int]
 
     def __init__(self):
-        self.characters_path = []
         self.best_characters = []
-        self.score_path = []
-    
-    def get_score(self, state:AutoMoveMazeState, is_print: bool = False) -> int:
+
+    def get_score(self, state: AutoMoveMazeState, is_print: bool = False) -> int:
         tmp_state: AutoMoveMazeState = AutoMoveMazeState(
             state.turn_, state.point_,
             state.characters_, state.game_score_)
@@ -145,56 +141,99 @@ class HillClimb():
                 tmp_state.print_maze_state()
         return tmp_state.game_score_
 
-    def play_game(self, numbers:int=10) -> None:
+    def play_game(self, numbers: int = 10) -> Tuple[int,int]:
+        global SIMULATE_NUMBER
+
         random.seed(int(time.time()))
         now_state = AutoMoveMazeState()
         now_state.initial_solution()
-        s = sum(sum(x) for x in now_state.point_)\
-            - sum(now_state.point_[cd.y_][cd.x_] for cd in now_state.characters_)
-
-        total_number: int = sum(sum(x) for x in now_state.point_) \
+        total_number = sum(sum(x) for x in now_state.point_) \
                             - sum(now_state.point_[cd.y_][cd.x_] for cd in now_state.characters_)
 
-        print(f'  ------------ initial state (total numbers in maze = {total_number=})')
-        now_state.print_maze_state()
-
         now_characters = [cd for cd in now_state.characters_]
-        self.characters_path.append(now_characters)
-        best_score:int = self.get_score(now_state)
+        best_score: int = self.get_score(now_state)
         self.best_characters = now_characters
-        self.score_path.append(best_score)
         for _ in range(numbers):
-            next_state:AutoMoveMazeState = AutoMoveMazeState(
+            next_state: AutoMoveMazeState = AutoMoveMazeState(
                 now_state.turn_, now_state.point_,
                 now_characters, now_state.game_score_
             )
             next_state.transition()
             characters = [Coord(cd.y_, cd.x_) for cd in next_state.characters_]
-            next_score:int = self.get_score(next_state)
+            next_score: int = self.get_score(next_state)
             if next_score > best_score:
                 best_score = next_score
                 now_characters = characters
                 self.best_characters = now_characters
-                self.characters_path.append(characters)
-                self.score_path.append(next_score)
 
-        print(' -------------- solution')
-        if PRINT_STATE_ and len(self.characters_path) < 100:
-            print('        --- charcters  :  score')
-            for i in range(len(self.characters_path)):
-                self.print_path(self.score_path[i], self.characters_path[i])
         now_state.characters_ = self.best_characters
-        now_state.print_maze_state()
-        best_score_ = self.get_score(now_state, PRINT_STATE_)
-        scoring_rate: float = best_score_ / total_number
-        print()
-        print(f'Score of hill climb action: {best_score_=} : scoring_rate={scoring_rate:.4f}')
+        best_score += self.get_score(now_state, PRINT_STATE_)
 
-    def print_path(self, score:int, characters:List[Coord]):
-        """for test """
-        for cd in characters:
-            print(f'{cd.y_,cd.x_}, ', end='')
-        print(f'  :  {score=}')
+        return (best_score, total_number)
+
+class SimulatedAnnealing():
+    now_state: AutoMoveMazeState
+    next_state: AutoMoveMazeState
+    best_characters: List[Coord]
+
+    def __init__(self):
+        self.best_characters = []
+
+    def get_score(self, state: AutoMoveMazeState, is_print: bool = False) -> int:
+        tmp_state: AutoMoveMazeState = AutoMoveMazeState(
+            state.turn_, state.point_,
+            state.characters_, state.game_score_)
+        for character in state.characters_:
+            tmp_state.point_[character.y_][character.x_] = 0
+        while not tmp_state.is_done():
+            tmp_state.advance()
+            if is_print:
+                tmp_state.print_maze_state()
+        return tmp_state.game_score_
+
+    def play_game(self, numbers: int = 10, start_temp:float = 500.0,
+                  end_temp:float = 10.0) -> Tuple[int,int]:
+        global SIMULATE_NUMBER
+
+        now_score:int
+        next_score: int
+        best_score: int
+        temp:float
+        probability: float
+        is_force_next: bool
+
+        random.seed(int(time.time()))
+        now_state = AutoMoveMazeState()
+        now_state.initial_solution()
+        total_number: int = sum(sum(x) for x in now_state.point_) \
+                            - sum(now_state.point_[cd.y_][cd.x_] for cd in now_state.characters_)
+
+        now_characters = [cd for cd in now_state.characters_]
+        best_score = self.get_score(now_state)
+        now_score = best_score
+        self.best_characters = now_characters
+        for i in range(numbers):
+            next_state: AutoMoveMazeState = AutoMoveMazeState(
+                now_state.turn_, now_state.point_,
+                now_characters, now_state.game_score_
+            )
+            next_state.transition()
+            characters = [Coord(cd.y_, cd.x_) for cd in next_state.characters_]
+            next_score = self.get_score(next_state)
+            temp = start_temp + (end_temp - start_temp) * (i / numbers)
+            probability = math.exp((next_score - now_score) / temp)
+            is_force_next = (probability > (random.random()))
+            if next_score > now_score or is_force_next:
+                now_score = next_score
+                now_characters = characters
+            if next_score > best_score:
+                best_score = next_score
+                self.best_characters = characters
+        now_state.characters_ = self.best_characters
+        best_score = self.get_score(now_state, PRINT_STATE_)
+
+        return (best_score , total_number)
+
     def set_const(self):
         global MAZE_WIDTH_, MAZE_HEIGHT_, GAME_END_TURN_, PRINT_STATE_, GAME_NUMBERS_
 
@@ -223,72 +262,38 @@ class HillClimb():
         except:
             print('args error in comandoline, the command line is written as follows')
             print(
-                './hill_climb_py MAZE_WIDTH=4 --MAZE_HEIGHT=3 --GAME_END_TURN=4 --PRINT_STATE=y --GAME_NUMBERS=10000')
+                './simulated_annealing_py MAZE_WIDTH=4 --MAZE_HEIGHT=3 --GAME_END_TURN=4 --PRINT_STATE=y --GAME_NUMBERS=10000')
             sys.exit(0)
         print(f'maze_state: {MAZE_WIDTH_=} {MAZE_HEIGHT_=} {GAME_END_TURN_=} {PRINT_STATE_=} {GAME_NUMBERS_=}')
 
 
+SIMULATE_NUMBER = 10000
 stime = time.time()
-hc = HillClimb()
-hc.set_const()
-hc.play_game(GAME_NUMBERS_)
+
+sum_total_number: int = 0
+sum_score: int = 0
+for _ in range(SIMULATE_NUMBER):
+    hc = SimulatedAnnealing()
+    s, n = hc.play_game(10000)
+    sum_score += s
+    sum_total_number += n
+    del hc
+r1 = sum_score / sum_total_number
+
+sum_total_number: int = 0
+sum_score: int = 0
+for _ in range(SIMULATE_NUMBER):
+    sa = SimulatedAnnealing()
+    s, n = sa.play_game(10000)
+    sum_score += s
+    sum_total_number += n
+    del sa
+r2 = sum_score / sum_total_number
+print(f'{SIMULATE_NUMBER=}')
+print(f'mean of scoring ratio : hill climb {r1:.4f} , simulated nealing {r2:.4f}')
 etime = time.time()
 print(f'処理時間 {etime - stime}(秒)')
 
 """
-maze_state: MAZE_WIDTH_=5 MAZE_HEIGHT_=5 GAME_END_TURN_=5 PRINT_STATE_=True
-  ------------ initial state (total numbers in maze = 117)
-turn_=0 , game_score_=0:charcters (4, 3) (0, 0) (2, 0) 
-@6647
-89272
-@4987
-61825
-223@9
- -------------- solution
-        --- charcters  :  score
-(4, 3), (0, 0), (2, 0),   :  score=71
-(4, 3), (0, 0), (3, 0),   :  score=90
-(4, 3), (0, 2), (3, 0),   :  score=91
-(4, 3), (1, 3), (3, 0),   :  score=97
-(4, 3), (4, 0), (3, 0),   :  score=99
-(4, 3), (3, 1), (3, 0),   :  score=103
-turn_=0 , game_score_=0:charcters (4, 3) (3, 1) (3, 0) 
-36647
-89272
-84987
-@@825
-223@9
-turn_=1 , game_score_=25:charcters (4, 4) (3, 2) (2, 0) 
-36647
-89272
-@4987
-..@25
-223.@
-turn_=2 , game_score_=47:charcters (3, 4) (2, 2) (1, 0) 
-36647
-@9272
-.4@87
-...2@
-223..
-turn_=3 , game_score_=71:charcters (2, 4) (2, 3) (1, 1) 
-36647
-.@272
-.4.@@
-...2.
-223..
-turn_=4 , game_score_=86:charcters (1, 4) (1, 3) (0, 1) 
-3@647
-..2@@
-.4...
-...2.
-223..
-turn_=5 , game_score_=103:charcters (0, 4) (0, 3) (0, 2) 
-3.@@@
-..2..
-.4...
-...2.
-223..
 
-Score of hill climb action: 103
-処理時間 0.24722576141357422(秒)
 """
